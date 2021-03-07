@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import imutils
+from scipy.spatial import distance
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -60,8 +61,42 @@ cnts = imutils.grab_contours(cnts)
 #https://stackoverflow.com/questions/58959488/cv2-drawcontours-isnt-displaying-correct-color
 thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2RGB)
 #https://docs.opencv.org/master/d4/d73/tutorial_py_contours_begin.html
-cv2.drawContours(thresh, cnts, -1, (255,0,0), 2)
+#cv2.drawContours(thresh, cnts, -1, (255,0,0), 2)
 
+#https://stackoverflow.com/questions/61541559/finding-the-contour-closest-to-image-center-in-opencv2
+#find center of image and draw it (blue circle)
+cv2.circle(thresh, (int(W/2), int(H/2)), 3, (0, 0, 255), 2)
+
+spots = []
+
+#https://stackoverflow.com/questions/60637120/detect-circles-in-opencv
+for c in cnts:
+    peri = cv2.arcLength(c, True)
+    approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+    area = cv2.contourArea(c)
+    if len(approx) > 3 and area < H*W/4:
+        ((x, y), r) = cv2.minEnclosingCircle(c)
+        #cv2.circle(thresh, (int(x), int(y)), int(r), (36, 255, 12), 1)
+        #https://www.pyimagesearch.com/2016/02/01/opencv-center-of-contour/
+
+        # calculate distance to image_center
+        distances_to_center = (distance.euclidean((W/2, H/2), (x, y)))
+
+        # save to a list of dictionaries
+        spots.append({'contour': c, 'center': (int(x), int(y)), 'radius': int(r), 'distance_to_center': distances_to_center})
+
+# sort the spots
+sorted_spots = sorted(spots, key=lambda i: i['distance_to_center'])
+
+#cv2.circle(thresh, sorted_spots[0]['center'], sorted_spots[0]['radius'], (127, 127, 127), 1)
+
+#sort again by size
+sorted_size_spots = sorted(sorted_spots[0:9], key=lambda i: i['radius'], reverse=True)
+
+# for i in sorted_size_spots:
+#     cv2.circle(thresh, i['center'], i['radius'], (255, 0, 0), 1)
+
+cv2.circle(thresh, sorted_size_spots[0]['center'], sorted_size_spots[0]['radius'], (36, 255, 12), 1)
 
 #https://stackoverflow.com/questions/24886625/pycharm-does-not-show-plot
 images = [img, img_gray, img_denoised, thresh, thresh_O, adap_gaussian_8]
