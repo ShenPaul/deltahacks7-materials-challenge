@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import imutils
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -38,17 +39,32 @@ else:
 
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-_, thresh = cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY)
+#https://docs.opencv.org/3.4/d5/d69/tutorial_py_non_local_means.html
+img_denoised = cv2.fastNlMeansDenoising(img_gray, None, 5, 7, 21)
 
-_, thresh_O = cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+_, thresh = cv2.threshold(img_denoised, 127, 255, cv2.THRESH_BINARY)
+
+#https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
+_, thresh_O = cv2.threshold(img_denoised, 127, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
 #https://towardsdatascience.com/computer-vision-for-beginners-part-2-29b3f9151874
-adap_gaussian_8 = cv2.adaptiveThreshold(img_gray, 255,
+adap_gaussian_8 = cv2.adaptiveThreshold(img_denoised, 255,
                                     cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                     cv2.THRESH_BINARY, 95, 3)
 
+#https://www.pyimagesearch.com/2016/02/08/opencv-shape-detection/
+cnts = cv2.findContours(thresh, cv2.RETR_TREE,
+	cv2.CHAIN_APPROX_SIMPLE)
+cnts = imutils.grab_contours(cnts)
+
+#https://stackoverflow.com/questions/58959488/cv2-drawcontours-isnt-displaying-correct-color
+thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2RGB)
+#https://docs.opencv.org/master/d4/d73/tutorial_py_contours_begin.html
+cv2.drawContours(thresh, cnts, -1, (255,0,0), 2)
+
+
 #https://stackoverflow.com/questions/24886625/pycharm-does-not-show-plot
-images = [img, img_gray, thresh, thresh_O, adap_gaussian_8]
+images = [img, img_gray, img_denoised, thresh, thresh_O, adap_gaussian_8]
 
 fig, axs = plt.subplots(nrows = 2, ncols = 3, figsize = (15, 15))
 for ind, p in enumerate(images):
