@@ -2,10 +2,25 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import imutils
+import math
 from scipy.spatial import distance
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
+
+#https://www.w3schools.com/python/python_functions.asp
+#https://stackoverflow.com/questions/63926690/how-to-calculate-the-angle-between-two-points-in-python-3
+def calcAngle(p1, p2):
+    # Difference in x coordinates
+    dx = p2[0] - p1[0]
+
+    # Difference in y coordinates
+    dy = p2[1] - p1[1]
+
+    # Angle between p1 and p2 in radians
+    theta = math.degrees(math.atan2(dy, dx))
+
+    return theta
 
 #print(cv2.__version__)
 
@@ -114,7 +129,7 @@ for s in sorted_spots:
 sorted_spots = sorted(spots, key=lambda i: i['distance_to_center'])
 sorted_spots = sorted_spots[1:11]
 
-print (sorted_spots)
+#print (sorted_spots)
 
 for s in sorted_spots:
     cv2.circle(thresh, s['center'], s['radius'], (255, 0, 0), 1)
@@ -122,7 +137,18 @@ for s in sorted_spots:
 
 angles = []
 
+for s in sorted_spots:
+    j = 1;
+    for i in sorted_spots[j:]:
+        #calculate angle with every other
+        angles.append(abs(calcAngle(s['center_center'], i['center_center'])))
 
+    #https://stackoverflow.com/questions/1485841/behaviour-of-increment-and-decrement-operators-in-python
+    j += 1
+
+angles.sort()
+
+print (angles)
 
 #https://stackoverflow.com/questions/24886625/pycharm-does-not-show-plot
 images = [img, img_gray, img_denoised, thresh, thresh_O, adap_gaussian_8]
