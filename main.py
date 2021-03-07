@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 
 
-print(cv2.__version__)
+#print(cv2.__version__)
 
 # This code is to hide the main tkinter window
 root = tk.Tk()
@@ -65,7 +65,7 @@ thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2RGB)
 
 #https://stackoverflow.com/questions/61541559/finding-the-contour-closest-to-image-center-in-opencv2
 #find center of image and draw it (blue circle)
-cv2.circle(thresh, (int(W/2), int(H/2)), 3, (0, 0, 255), 2)
+#cv2.circle(thresh, (int(W/2), int(H/2)), 3, (0, 0, 255), 2)
 
 spots = []
 
@@ -97,6 +97,32 @@ sorted_size_spots = sorted(sorted_spots[0:9], key=lambda i: i['radius'], reverse
 #     cv2.circle(thresh, i['center'], i['radius'], (255, 0, 0), 1)
 
 cv2.circle(thresh, sorted_size_spots[0]['center'], sorted_size_spots[0]['radius'], (36, 255, 12), 1)
+
+spots = []
+
+for s in sorted_spots:
+    # calculate distance to central spot
+    distances_to_center = (distance.euclidean(sorted_size_spots[0]['center'], s['center']))
+
+    #https://stackoverflow.com/questions/17418108/elegant-way-to-perform-tuple-arithmetic
+    centre = tuple(np.subtract(s['center'], sorted_size_spots[0]['center']))
+
+    # save to a list of dictionaries
+    spots.append({'contour': s['contour'], 'center_center': centre, 'center': s['center'], 'radius': s['radius'], 'distance_to_center': distances_to_center})
+
+# sort the spots
+sorted_spots = sorted(spots, key=lambda i: i['distance_to_center'])
+sorted_spots = sorted_spots[1:11]
+
+print (sorted_spots)
+
+for s in sorted_spots:
+    cv2.circle(thresh, s['center'], s['radius'], (255, 0, 0), 1)
+
+
+angles = []
+
+
 
 #https://stackoverflow.com/questions/24886625/pycharm-does-not-show-plot
 images = [img, img_gray, img_denoised, thresh, thresh_O, adap_gaussian_8]
